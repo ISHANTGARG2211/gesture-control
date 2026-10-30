@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gesture Controls Dashboard</title>
+    <!-- Google Fonts: Orbitron for Sci-Fi HUD elements, Inter for clean body copy -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <!-- Neon grid background effect -->
+    <div class="neon-grid"></div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="logo-area">
+                <span class="logo-icon">✋</span>
+                <h1 class="neon-text">GESTURE CONTROLS</h1>
+                <span class="version-tag">v4.1.0</span>
+            </div>
+            <div class="status-panel">
+                <div class="status-indicator">
+                    <span class="pulse-dot active" id="engineStatusDot"></span>
+                    <span id="engineStatusText">SYSTEM ACTIVE</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT GRID -->
+        <main class="dashboard-grid">
+            
+            <!-- LEFT PANEL: CAMERA VIEW & CORE ACTIONS -->
+            <section class="grid-card camera-card">
+                <div class="card-header">
+                    <h2>LIVE HUD STREAM</h2>
+                    <div class="card-badges">
+                        <span class="badge cyan-glow" id="cameraResBadge">1280x720</span>
+                    </div>
+                </div>
+                <div class="video-container">
+                    <div class="hud-corners">
+                        <div class="c-top-left"></div>
+                        <div class="c-top-right"></div>
+                        <div class="c-bottom-left"></div>
+                        <div class="c-bottom-right"></div>
+                    </div>
+                    <!-- MJPEG Video Stream target -->
+                    <img id="videoStream" src="/api/video_feed" alt="Webcam Feed (Offline)" class="stream-img">
+                    <div class="stream-offline-overlay" id="streamOfflineOverlay">
+                        <span class="offline-icon">📹</span>
+                        <p>Camera Stream Offline</p>
+                    </div>
+                </div>
+                <div class="controls-area">
+                    <button class="btn btn-primary btn-glow" id="toggleEngineBtn">STOP GESTURE RUNNER</button>
+                    <button class="btn btn-secondary" id="restartStreamBtn">RELOAD STREAM</button>
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL: TELEMETRY & SYSTEM GAUGES -->
+            <section class="grid-card telemetry-card">
+                <div class="card-header">
+                    <h2>HUD DATA TELEMETRY</h2>
+                </div>
+                
+                <div class="telemetry-grid">
+                    <!-- FPS Card -->
+                    <div class="tele-item">
+                        <span class="tele-label">SYSTEM FPS</span>
+                        <span class="tele-value green-text" id="teleFps">0.0</span>
+                        <div class="tele-gauge-bg"><div class="tele-gauge-fill" id="fpsGauge" style="width: 0%;"></div></div>
+                    </div>
+                    <!-- Detected Hand Card -->
+                    <div class="tele-item">
+                        <span class="tele-label">ACTIVE HAND</span>
+                        <span class="tele-value cyan-text" id="teleHand">NONE</span>
+                        <div class="tele-subtext" id="teleHandLabel">-</div>
+                    </div>
+                    <!-- Current Gesture Card -->
+                    <div class="tele-item">
+                        <span class="tele-label">GESTURE DETECTED</span>
+                        <span class="tele-value yellow-text" id="teleGesture">UNKNOWN</span>
+                        <div class="tele-subtext" id="teleGestureDetail">-</div>
+                    </div>
+                    <!-- Triggered Action Card -->
+                    <div class="tele-item">
+                        <span class="tele-label">LAST ACTION</span>
+                        <span class="tele-value pink-text" id="teleAction">NONE</span>
+                        <div class="tele-subtext" id="teleActionTime">-</div>
+                    </div>
+                </div>
+
+                <!-- Volume level gauge -->
+                <div class="volume-console">
+                    <div class="vol-header">
+                        <span class="vol-label">🖥️ OS VOLUME LEVEL</span>
+                        <span class="vol-value" id="volVal">0%</span>
+                    </div>
+                    <div class="vol-slider-container">
+                        <span class="slider-notch">-</span>
+                        <input type="range" min="0" max="100" value="0" class="vol-slider" id="volumeSlider">
+                        <span class="slider-notch">+</span>
+                    </div>
+                    <p class="vol-hint">Distance between index finger and thumb dynamically controls this level.</p>
+                </div>
+            </section>
+
+            <!-- CONFIGURATION SECTION -->
+            <section class="grid-card span-2 config-card">
+                <div class="card-header">
+                    <h2>SYSTEM PARAMETERS CONFIGURATION</h2>
+                    <span class="badge-status" id="configSaveStatus">All settings synced</span>
+                </div>
+                <form id="configForm" class="config-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="cameraIndex">Camera Device Index</label>
+                            <input type="number" id="cameraIndex" name="camera_index" value="0" min="0" max="10">
+                        </div>
+                        <div class="form-group">
+                            <label for="detectionConfidence">Min Detection Confidence</label>
+                            <input type="number" id="detectionConfidence" name="detection_confidence" step="0.05" min="0.1" max="1.0" value="0.75">
+                        </div>
+                        <div class="form-group">
+                            <label for="cooldownTime">Action Cooldown (seconds)</label>
+                            <input type="number" id="cooldownTime" name="cooldown" step="0.1" min="0.5" max="5.0" value="1.5">
+                        </div>
+                        <div class="form-group">
+                            <label for="chatgptUrl">ChatGPT URL Redirect</label>
+                            <input type="url" id="chatgptUrl" name="chatgpt_url" value="https://chatgpt.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="youtubeUrl">YouTube URL Redirect</label>
+                            <input type="url" id="youtubeUrl" name="youtube_url" value="https://youtube.com">
+                        </div>
+                        <div class="form-group flex-align-end">
+                            <button type="submit" class="btn btn-success btn-full" id="saveConfigBtn">APPLY CONFIGURATION</button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+
+            <!-- LOG TERMINAL -->
+            <section class="grid-card terminal-card">
+                <div class="card-header">
+                    <h2>SYSTEM EVENT LOG</h2>
+                    <button class="btn btn-secondary btn-xs" id="clearLogsBtn">CLEAR VIEW</button>
+                </div>
+                <div class="terminal-body" id="logTerminal">
+                    <div class="term-line system-msg">[SYSTEM] Connecting to server...</div>
+                </div>
+            </section>
+
+            <!-- SCREENSHOTS GALLERY -->
+            <section class="grid-card gallery-card">
+                <div class="card-header">
+                    <h2>SCREENSHOTS CAPTURED</h2>
+                    <span class="badge count-badge" id="screenshotCount">0 screenshots</span>
+                </div>
+                <div class="gallery-body" id="galleryGrid">
+                    <!-- Dynamic screenshots list -->
+                </div>
+            </section>
+
+            <!-- GESTURE RUNNING TUTORIAL / MAPPING REFERENCE -->
+            <section class="grid-card span-2 reference-card">
+                <div class="card-header">
+                    <h2>GESTURE REFERENCE TUTORIAL</h2>
+                </div>
+                <div class="reference-grid">
+                    <div class="ref-card">
+                        <div class="ref-icon">🤏</div>
+                        <h3>Index & Thumb Pinch</h3>
+                        <p class="ref-desc">Move thumb and index finger closer together or further apart. Controls OS Volume Level smoothly.</p>
+                    </div>
+                    <div class="ref-card">
+                        <div class="ref-icon">👍</div>
+                        <h3>Thumb Up</h3>
+                        <p class="ref-desc">Show a thumbs up sign. Launches ChatGPT in your default web browser.</p>
+                    </div>
+                    <div class="ref-card">
+                        <div class="ref-icon">✌️</div>
+                        <h3>Peace Sign</h3>
+                        <p class="ref-desc">Raise index and middle fingers. Captures a full high-resolution desktop screenshot.</p>
+                    </div>
+                    <div class="ref-card">
+                        <div class="ref-icon">🤘</div>
+                        <h3>Rock Sign</h3>
+                        <p class="ref-desc">Raise index, pinky and thumb. Opens YouTube directly in your browser.</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+        
+        <footer class="app-footer">
+            <p>AI Powered Gesture Controls Dashboard | Built for Intelligent Human-Computer Automation</p>
+        </footer>
+    </div>
+
+    <!-- Image Modal for screenshot preview -->
+    <div class="image-modal" id="imageModal">
+        <span class="modal-close" id="modalClose">&times;</span>
+        <img class="modal-content" id="modalImg">
+        <div id="modalCaption"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
